@@ -1,0 +1,5 @@
+gpu_profile:
+  name: l4_24gb
+  dtype: bf16
+  vram_gb: 24
+  recommended_batch_size: 2

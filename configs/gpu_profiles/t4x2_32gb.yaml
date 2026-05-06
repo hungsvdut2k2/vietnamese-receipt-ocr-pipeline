@@ -1,0 +1,5 @@
+gpu_profile:
+  name: t4x2_32gb
+  dtype: bf16
+  vram_gb: 32
+  recommended_batch_size: 2

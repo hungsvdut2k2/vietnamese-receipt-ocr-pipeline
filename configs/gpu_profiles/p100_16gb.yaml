@@ -1,0 +1,5 @@
+gpu_profile:
+  name: p100_16gb
+  dtype: fp16
+  vram_gb: 16
+  recommended_batch_size: 1
