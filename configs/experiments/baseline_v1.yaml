@@ -1,0 +1,39 @@
+include:
+  - gpu_profiles/p100_16gb.yaml
+  - data/mcocr_train_val.yaml
+  - model/qwen3_vl_2b.yaml
+  - lora/r16_attn_mlp.yaml
+trainer:
+  epochs: 3
+  per_device_batch_size: 1
+  grad_accum: 8
+  lr: 1.0e-4
+  warmup_ratio: 0.05
+  optimizer: adamw_8bit
+  gradient_checkpointing: true
+  seed: 42
+  deterministic: false
+  wallclock_budget_hours: 8.0
+wandb:
+  project: vn-receipt-ocr
+  run_name_template: "{model_short}-r{lora_rank}-{date}-{nnn}"
+  enabled: true
+  mode_fallback: offline
+hf_hub:
+  repo_owner: TODO_SET_VIA_OVERRIDE
+  repo_name_template: "vn-receipt-ocr-{run_id}"
+  private: true
+  enabled: true
+eval:
+  metrics_enabled:
+    - cer
+    - diacritic_cer
+    - cer_normalized
+    - wer
+    - edit_ops
+    - length_ratio
+    - empty_pred_rate
+    - latency
+  decode: greedy
+  max_new_tokens: 244
+  sample_table_size: 10

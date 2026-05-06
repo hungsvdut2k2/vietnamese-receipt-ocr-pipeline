@@ -1,0 +1,3 @@
+model:
+  model_id: unsloth/Qwen3-VL-2B-Instruct
+  freeze_vision_tower: true
