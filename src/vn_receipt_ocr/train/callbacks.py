@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 from typing import Any, Callable
@@ -99,3 +100,47 @@ class PerEpochEvalCallback:
         record = {"epoch": epoch, **{f"eval/{k}": v for k, v in metrics.items()}}
         self.history.append(record)
         self.log_event_fn(record)
+
+
+class CheckpointSyncCallback:
+    """On each eval, optionally write/save the model and upload to HF Hub
+    only if `primary_metric` improved.
+
+    save_fn(path): persists model+processor to `path`.
+    upload_fn(local_dir, commit_msg): pushes to HF Hub (mocked in tests).
+    """
+
+    def __init__(
+        self,
+        *,
+        local_root: Path,
+        save_fn: Callable[[Path], None],
+        upload_fn: Callable[[Path, str], None] | None,
+        primary_metric: str = "diacritic_cer",
+    ) -> None:
+        self.local_root = Path(local_root)
+        self.local_root.mkdir(parents=True, exist_ok=True)
+        self.save_fn = save_fn
+        self.upload_fn = upload_fn
+        self.primary_metric = primary_metric
+        self.best_value = math.inf
+
+    def handle_eval(self, *, epoch: int | float | None, metrics: dict) -> bool:
+        epoch_dir = self.local_root / f"epoch_{int(epoch) if epoch else 0}"
+        self.save_fn(epoch_dir)
+
+        cur = metrics.get(self.primary_metric)
+        if cur is None:
+            return False
+
+        if cur < self.best_value:
+            self.best_value = cur
+            best_dir = self.local_root / "best"
+            self.save_fn(best_dir)
+            if self.upload_fn is not None:
+                self.upload_fn(
+                    best_dir,
+                    f"epoch {epoch} | {self.primary_metric} {cur:.4f}",
+                )
+            return True
+        return False

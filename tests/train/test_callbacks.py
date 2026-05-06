@@ -61,3 +61,30 @@ def test_per_epoch_eval_callback_calls_eval_fn(tmp_path):
     assert record["epoch"] == 1
     assert record["eval/cer"] == 0.1
     assert cb.history == [record]
+
+
+def test_checkpoint_sync_uploads_only_when_better(tmp_path):
+    from vn_receipt_ocr.train.callbacks import CheckpointSyncCallback
+    uploads = []
+
+    def fake_upload(local_dir, commit_msg):
+        uploads.append((local_dir, commit_msg))
+
+    def fake_save(path):
+        path.mkdir(parents=True, exist_ok=True)
+
+    cb = CheckpointSyncCallback(
+        local_root=tmp_path / "ckpt",
+        save_fn=fake_save,
+        upload_fn=fake_upload,
+        primary_metric="diacritic_cer",
+    )
+    # First call: 0.5 → improves over inf → upload
+    cb.handle_eval(epoch=1, metrics={"diacritic_cer": 0.5})
+    assert len(uploads) == 1
+    # Second call: 0.6 → worse → no upload
+    cb.handle_eval(epoch=2, metrics={"diacritic_cer": 0.6})
+    assert len(uploads) == 1
+    # Third call: 0.4 → improves → upload
+    cb.handle_eval(epoch=3, metrics={"diacritic_cer": 0.4})
+    assert len(uploads) == 2
