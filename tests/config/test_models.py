@@ -22,7 +22,7 @@ def test_gpu_profile_rejects_unknown_dtype():
 
 def test_train_config_round_trip():
     cfg = TrainConfig(
-        model=ModelConfig(model_id="unsloth/Qwen3-VL-2B-Instruct"),
+        model=ModelConfig(model_id="Qwen/Qwen3-VL-2B-Instruct"),
         lora=LoRAConfig(rank=16, alpha=32, dropout=0.05,
                         target_modules=["q_proj","k_proj","v_proj","o_proj",
                                         "gate_proj","up_proj","down_proj"],
