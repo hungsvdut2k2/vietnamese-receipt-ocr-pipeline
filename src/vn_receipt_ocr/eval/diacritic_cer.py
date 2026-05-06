@@ -29,7 +29,9 @@ def compute_diacritic_cer(
     *, predictions: list[str], references: list[str]
 ) -> float:
     if len(predictions) != len(references):
-        raise ValueError("predictions and references length mismatch")
+        raise ValueError(
+            f"length mismatch: predictions={len(predictions)} references={len(references)}"
+        )
     p_filt = [filter_to_diacritic_chars(p) for p in predictions]
     r_filt = [filter_to_diacritic_chars(r) for r in references]
     # If no diacritics anywhere in references, return 0.0 (sentinel)

@@ -1,3 +1,5 @@
+import pytest
+
 from vn_receipt_ocr.eval.diacritic_cer import (
     compute_diacritic_cer,
     filter_to_diacritic_chars,
@@ -40,3 +42,8 @@ def test_diacritic_cer_returns_zero_when_no_diacritics_in_reference():
         predictions=["abc"], references=["abc"],
     )
     assert cer == 0.0
+
+
+def test_diacritic_cer_raises_on_length_mismatch():
+    with pytest.raises(ValueError, match="length mismatch"):
+        compute_diacritic_cer(predictions=["a", "b"], references=["x"])
