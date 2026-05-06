@@ -10,6 +10,8 @@ _TRACKED_LIBS = [
     "transformers",
     "peft",
     "trl",
+    "accelerate",
+    "bitsandbytes",
     "unsloth",
     "huggingface_hub",
     "wandb",
