@@ -185,7 +185,7 @@ def train(config: TrainConfig, *, dry_run: bool = False, max_steps: int | None =
 
     class _HFEvalShim(TrainerCallback):
         def on_epoch_end(self, args, state, control, **kw):
-            metrics = eval_cb.on_epoch_end(args, state, control, **kw) or {}
+            eval_cb.on_epoch_end(args, state, control, **kw)
             if eval_cb.history:
                 last = eval_cb.history[-1]
                 clean = {k.replace("eval/", ""): v for k, v in last.items()
@@ -200,12 +200,16 @@ def train(config: TrainConfig, *, dry_run: bool = False, max_steps: int | None =
         callbacks=[_HFEvalShim()],
     )
 
-    if not dry_run:
-        trainer.train()
-
-    return {
-        "run_id": run_id,
-        "run_name": run_name,
-        "best_diacritic_cer": ckpt_cb.best_value,
-        "history": eval_cb.history,
-    }
+    try:
+        if not dry_run:
+            trainer.train()
+        return {
+            "run_id": run_id,
+            "run_name": run_name,
+            "best_diacritic_cer": ckpt_cb.best_value,
+            "history": eval_cb.history,
+        }
+    finally:
+        fallback = wandb_state.get("fallback")
+        if fallback is not None:
+            fallback.close()
