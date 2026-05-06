@@ -1,15 +1,9 @@
 from __future__ import annotations
 import time
 import torch
-from PIL import Image
 
+from vn_receipt_ocr.data.image_io import load_image_rgb
 from vn_receipt_ocr.data.prompt import PromptBuilder
-
-
-def _load_image(p) -> Image.Image:
-    if isinstance(p, Image.Image):
-        return p.convert("RGB")
-    return Image.open(p).convert("RGB")
 
 
 @torch.inference_mode()
@@ -33,7 +27,7 @@ def batch_predict(
     times: list[float] = []
     for start in range(0, len(items), batch_size):
         batch = items[start : start + batch_size]
-        imgs = [_load_image(it["image_path"]) for it in batch]
+        imgs = [load_image_rgb(it["image_path"]) for it in batch]
         texts = [
             processor.apply_chat_template(
                 pb.build_inference_messages(image=im),

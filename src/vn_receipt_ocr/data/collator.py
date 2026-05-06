@@ -1,18 +1,12 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 
 import torch
 from PIL import Image
 
+from vn_receipt_ocr.data.image_io import load_image_rgb
 from vn_receipt_ocr.data.prompt import PromptBuilder
-
-
-def _load_image(image_path: Image.Image | str | Path) -> Image.Image:
-    if isinstance(image_path, Image.Image):
-        return image_path.convert("RGB")
-    return Image.open(image_path).convert("RGB")
 
 
 class QwenVLCollator:
@@ -37,7 +31,7 @@ class QwenVLCollator:
 
         for it in items:
             pb = self._build_prompt_builder(it["instruction"])
-            img = _load_image(it["image_path"])
+            img = load_image_rgb(it["image_path"])
             images.append(img)
             full_msgs = pb.build_train_messages(image=img, target=it["full_text"])
             prefix_msgs = pb.build_inference_messages(image=img)

@@ -13,9 +13,10 @@ venv/
 # EDA artifacts (regenerated from notebook)
 eda_outputs/
 
-# Datasets (downloaded at runtime; Kaggle/HF caches relocated to project root)
-data/
-datasets/
+# Datasets (downloaded at runtime; Kaggle/HF caches relocated to project root).
+# Anchored to project root so configs/data/ and src/**/data/ stay tracked.
+/data/
+/datasets/
 *.zip
 
 # Secrets (HF_TOKEN, KAGGLE_KEY, etc.)
