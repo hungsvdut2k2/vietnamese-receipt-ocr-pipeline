@@ -22,7 +22,12 @@ def batch_predict(
     max_new_tokens: int = 244,
     batch_size: int = 1,
 ) -> tuple[list[str], list[float]]:
-    """Greedy decode for each item. Returns (predictions, latency_ms_per_sample)."""
+    """Greedy decode for each item. Returns (predictions, latency_ms_per_sample).
+
+    Latency is the batch's wall-clock generate time divided by len(batch);
+    every sample in a batch reports the same value. For true per-item
+    percentiles, run with batch_size=1.
+    """
     pb = PromptBuilder(instruction=instruction)
     preds: list[str] = []
     times: list[float] = []
@@ -38,10 +43,10 @@ def batch_predict(
         ]
         inputs = processor(text=texts, images=imgs, return_tensors="pt",
                            padding=True).to(model.device)
-        t0 = time.time()
+        t0 = time.perf_counter()
         out = model.generate(**inputs, max_new_tokens=max_new_tokens,
                              do_sample=False)
-        elapsed_ms = (time.time() - t0) * 1000.0 / len(batch)
+        elapsed_ms = (time.perf_counter() - t0) * 1000.0 / len(batch)
         # Slice off the prompt tokens to get only the generated suffix.
         gen = out[:, inputs["input_ids"].shape[1]:]
         decoded = processor.batch_decode(gen, skip_special_tokens=True)
