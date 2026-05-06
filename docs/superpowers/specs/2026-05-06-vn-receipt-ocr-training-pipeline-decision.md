@@ -38,4 +38,8 @@ Build `vn_receipt_ocr` as a subpackage under `src/` of the existing repository. 
 
 ## In-flight Refinements
 
-None yet. (Populated during implementation if the plan deviates.)
+### 2026-05-06 — Unsloth recorded as `[gpu]` optional extra, not main dep
+- **Plan assumed:** Step 1 of Task 1 ran `uv add unsloth ...` putting Unsloth in `[project] dependencies`.
+- **Turned out:** Unsloth requires CUDA at install time (xformers wheel build). It cannot be installed on macOS / CPU-only machines, so `uv add` fails locally and CI without GPUs breaks.
+- **Chose:** Recorded Unsloth as `[project.optional-dependencies] gpu = ["unsloth"]`. Local dev / CI uses `pip install .` (no Unsloth); Kaggle uses `pip install vn-receipt-ocr[gpu]`.
+- **Why:** Preserves the dependency declaration for Kaggle while allowing the rest of the package (config, eval metrics, data loaders) to be developed and unit-tested without GPUs. Lazy-imports of `unsloth` already used in `model/loader.py` make the package importable without it. Tasks 26 (Kaggle notebook) and 27 (README) need to reference the `[gpu]` extras in install instructions.
