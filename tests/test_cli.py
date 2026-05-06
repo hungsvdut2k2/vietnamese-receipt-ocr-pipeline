@@ -20,3 +20,11 @@ def test_train_help_runs():
     )
     assert out.returncode == 0
     assert "--config" in out.stdout
+
+
+def test_top_level_imports():
+    import vn_receipt_ocr as m
+    assert hasattr(m, "train")
+    assert hasattr(m, "evaluate")
+    assert hasattr(m, "predict")
+    assert hasattr(m, "TrainConfig")
