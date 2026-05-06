@@ -51,6 +51,13 @@ class QwenVLCollator:
         # first prefix_len positions per row so loss is computed only on the response.
         for i in range(labels.shape[0]):
             prefix_len = int(prefix["attention_mask"][i].sum().item())
+            if not torch.equal(prefix["input_ids"][i, :prefix_len],
+                               full["input_ids"][i, :prefix_len]):
+                raise AssertionError(
+                    "Prefix tokens are not a literal prefix of the full sequence; "
+                    "the chat template's prefix invariant has drifted and "
+                    "response-only loss masking would corrupt training.",
+                )
             labels[i, :prefix_len] = -100
         labels[full["attention_mask"] == 0] = -100
 
