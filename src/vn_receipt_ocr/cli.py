@@ -45,7 +45,8 @@ def _build_parser() -> argparse.ArgumentParser:
     pe.add_argument("--configs-root", default="configs", type=Path)
     pe.add_argument("--adapters", required=True, type=str,
                     help="Local path or hf://owner/repo")
-    pe.add_argument("--override", action="append", default=[])
+    pe.add_argument("--override", action="append", default=[],
+                    help="Dotted-key overrides, e.g. lora.rank=8")
     pe.add_argument("--split", choices=["val", "test"], default="val")
 
     pp = sub.add_parser("predict", help="Predict on a directory of images")
@@ -54,7 +55,8 @@ def _build_parser() -> argparse.ArgumentParser:
     pp.add_argument("--adapters", required=True, type=str)
     pp.add_argument("--inputs", required=True, type=Path)
     pp.add_argument("--output", required=True, type=Path)
-    pp.add_argument("--override", action="append", default=[])
+    pp.add_argument("--override", action="append", default=[],
+                    help="Dotted-key overrides, e.g. lora.rank=8")
     return p
 
 
