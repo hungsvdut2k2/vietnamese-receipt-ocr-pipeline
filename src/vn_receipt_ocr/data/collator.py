@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import torch
@@ -8,7 +9,7 @@ from PIL import Image
 from vn_receipt_ocr.data.prompt import PromptBuilder
 
 
-def _load_image(image_path) -> Image.Image:
+def _load_image(image_path: Image.Image | str | Path) -> Image.Image:
     if isinstance(image_path, Image.Image):
         return image_path.convert("RGB")
     return Image.open(image_path).convert("RGB")
@@ -51,6 +52,9 @@ class QwenVLCollator:
                                 return_tensors="pt", padding=True)
 
         labels = full["input_ids"].clone()
+        # Invariant: the prefix's tokens are a literal prefix of the full sequence
+        # because Qwen-VL's chat template appends the assistant turn. We mask the
+        # first prefix_len positions per row so loss is computed only on the response.
         for i in range(labels.shape[0]):
             prefix_len = int(prefix["attention_mask"][i].sum().item())
             labels[i, :prefix_len] = -100
