@@ -88,3 +88,30 @@ def test_checkpoint_sync_uploads_only_when_better(tmp_path):
     # Third call: 0.4 → improves → upload
     cb.handle_eval(epoch=3, metrics={"diacritic_cer": 0.4})
     assert len(uploads) == 2
+    # Fourth call: equal to current best → strict improvement only, no upload.
+    cb.handle_eval(epoch=4, metrics={"diacritic_cer": 0.4})
+    assert len(uploads) == 2
+    # Fifth call: missing primary metric → returns False, no upload.
+    cb.handle_eval(epoch=5, metrics={"other": 0.0})
+    assert len(uploads) == 2
+
+
+def test_checkpoint_sync_handles_no_upload_fn(tmp_path):
+    from vn_receipt_ocr.train.callbacks import CheckpointSyncCallback
+
+    saved: list = []
+
+    def fake_save(path):
+        path.mkdir(parents=True, exist_ok=True)
+        saved.append(path)
+
+    cb = CheckpointSyncCallback(
+        local_root=tmp_path / "ckpt",
+        save_fn=fake_save,
+        upload_fn=None,
+        primary_metric="diacritic_cer",
+    )
+    improved = cb.handle_eval(epoch=1, metrics={"diacritic_cer": 0.5})
+    assert improved is True
+    # Both epoch_dir and best/ written; no upload attempted.
+    assert any(p.name == "best" for p in saved)
