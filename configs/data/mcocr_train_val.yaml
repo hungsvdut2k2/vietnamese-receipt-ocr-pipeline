@@ -1,0 +1,13 @@
+data:
+  train_path: datasets/kagglehub/datasets/domixi1989/vietnamese-receipts-mc-ocr-2021/versions/17/text_recognition_train_data.txt
+  # Full receipt JPGs for both splits live under train_images/train_images/.
+  # The val_images/ dir holds a different (unlabeled) set; ignore it for line-OCR.
+  train_images_dir: datasets/kagglehub/datasets/domixi1989/vietnamese-receipts-mc-ocr-2021/versions/17/train_images/train_images
+  val_path: datasets/kagglehub/datasets/domixi1989/vietnamese-receipts-mc-ocr-2021/versions/17/text_recognition_val_data.txt
+  val_images_dir: datasets/kagglehub/datasets/domixi1989/vietnamese-receipts-mc-ocr-2021/versions/17/train_images/train_images
+  test_path: null
+  test_images_dir: null
+  instruction: "Trích xuất toàn bộ nội dung văn bản từ hóa đơn này, giữ nguyên thứ tự đọc từ trên xuống dưới."
+  target_resolution: 888
+  max_resolution: 1388
+  max_seq_length: 203
