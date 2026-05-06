@@ -24,6 +24,12 @@ class JSONLFallback:
         except Exception:
             pass
 
+    def __enter__(self) -> "JSONLFallback":
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        self.close()
+
 
 def init_wandb(
     *,

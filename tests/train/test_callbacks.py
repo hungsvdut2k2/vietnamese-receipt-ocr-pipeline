@@ -11,6 +11,7 @@ def test_init_wandb_returns_offline_when_no_key(monkeypatch, tmp_path):
     )
     # Make wandb import fail to avoid actual wandb.init side effects
     monkeypatch.setitem(sys.modules, "wandb", None)
+    monkeypatch.delenv("WANDB_MODE", raising=False)
 
     from vn_receipt_ocr.train.callbacks import init_wandb
 
@@ -23,6 +24,10 @@ def test_init_wandb_returns_offline_when_no_key(monkeypatch, tmp_path):
     )
     # Either WANDB_MODE is offline OR we use JSONL fallback
     assert out["mode"] in ("offline", "disabled", "jsonl")
+    # When the key is absent, the fallback object must be created and usable.
+    assert out["fallback"] is not None
+    out["fallback"].log({"step": 0})
+    out["fallback"].close()
 
 
 def test_jsonl_fallback_writes_lines(tmp_path):
