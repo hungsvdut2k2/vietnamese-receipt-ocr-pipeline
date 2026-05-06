@@ -31,7 +31,14 @@ Upload `dist/vn_receipt_ocr-<version>-py3-none-any.whl` as a private Kaggle
 dataset (e.g. `<your-handle>/vn-receipt-ocr-wheel`). Attach to the notebook,
 then in Cell 1 use:
 
-    !pip install /kaggle/input/vn-receipt-ocr-wheel/vn_receipt_ocr-*.whl
+    !pip install vn_receipt_ocr-*.whl \
+        --find-links /kaggle/input/vn-receipt-ocr-wheel
+
+## GPU compatibility (important)
+Set Kaggle Accelerator to **GPU T4 x2** (or T4 / L4 / A100). Current Kaggle
+torch wheels are built for sm_70+ only — Tesla **P100 (sm_60) will not work**
+(you'll see `CUDA capability sm_60 is not compatible`). Cell 2 of
+`kaggle_train.ipynb` asserts this so the failure is loud and early.
 
 ## Required Kaggle Secrets
 Set both via Kaggle "Add-ons → Secrets":

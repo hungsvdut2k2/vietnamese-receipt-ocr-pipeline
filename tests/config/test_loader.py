@@ -38,7 +38,7 @@ def test_load_train_config_composes_includes(tmp_path: Path):
         "  instruction: 'X'\n  target_resolution: 888\n  max_resolution: 1388\n  max_seq_length: 203\n"
     )
     (base_dir / "model" / "q3.yaml").write_text(
-        "model:\n  model_id: unsloth/Qwen3-VL-2B-Instruct\n"
+        "model:\n  model_id: Qwen/Qwen3-VL-2B-Instruct\n"
     )
     (base_dir / "lora" / "r16.yaml").write_text(
         "lora:\n  rank: 16\n  alpha: 32\n  dropout: 0.05\n"
@@ -62,7 +62,7 @@ def test_load_train_config_composes_includes(tmp_path: Path):
     cfg = load_train_config(base_dir / "experiments" / "exp.yaml", configs_root=base_dir)
     assert cfg.lora.rank == 16
     assert cfg.gpu_profile.name == "p100_16gb"
-    assert cfg.model.model_id == "unsloth/Qwen3-VL-2B-Instruct"
+    assert cfg.model.model_id == "Qwen/Qwen3-VL-2B-Instruct"
 
 
 def test_overrides_take_highest_precedence(tmp_path: Path):

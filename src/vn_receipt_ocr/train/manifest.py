@@ -12,7 +12,6 @@ _TRACKED_LIBS = [
     "trl",
     "accelerate",
     "bitsandbytes",
-    "unsloth",
     "huggingface_hub",
     "wandb",
     "jiwer",

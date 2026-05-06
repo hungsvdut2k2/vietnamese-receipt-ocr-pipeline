@@ -1,39 +1,41 @@
-from vn_receipt_ocr.model.loader import build_load_kwargs, build_peft_kwargs
-from vn_receipt_ocr.config.models import ModelConfig, LoRAConfig, GPUProfileConfig
+import pytest
+import torch
+
+from vn_receipt_ocr.config.models import GPUProfileConfig, ModelConfig
+from vn_receipt_ocr.model.loader import _VISION_PATH, resolve_dtype
 
 
-def test_load_kwargs_uses_gpu_profile_dtype():
-    kw = build_load_kwargs(
+def test_resolve_dtype_uses_gpu_profile():
+    dt = resolve_dtype(
         model=ModelConfig(model_id="x"),
-        gpu_profile=GPUProfileConfig(name="p100_16gb", dtype="fp16",
+        gpu_profile=GPUProfileConfig(name="t4_16gb", dtype="bf16",
                                      vram_gb=16, recommended_batch_size=1),
     )
-    assert kw["model_name"] == "x"
-    assert kw["dtype"] == "float16"
-    assert kw["load_in_4bit"] is False
+    assert dt is torch.bfloat16
 
 
-def test_load_kwargs_dtype_override_wins():
-    kw = build_load_kwargs(
-        model=ModelConfig(model_id="x", dtype_override="bf16"),
-        gpu_profile=GPUProfileConfig(name="t4_16gb", dtype="fp16",
+def test_resolve_dtype_override_wins():
+    dt = resolve_dtype(
+        model=ModelConfig(model_id="x", dtype_override="fp16"),
+        gpu_profile=GPUProfileConfig(name="t4_16gb", dtype="bf16",
                                      vram_gb=16, recommended_batch_size=1),
     )
-    assert kw["dtype"] == "bfloat16"
+    assert dt is torch.float16
 
 
-def test_peft_kwargs_freeze_vision():
-    kw = build_peft_kwargs(
-        lora=LoRAConfig(rank=16, alpha=32, dropout=0.05,
-                        target_modules=["q_proj","k_proj","v_proj"],
-                        bias="none", finetune_vision_layers=False),
-    )
-    assert kw["r"] == 16
-    assert kw["lora_alpha"] == 32
-    assert kw["lora_dropout"] == 0.05
-    assert kw["target_modules"] == ["q_proj","k_proj","v_proj"]
-    assert kw["bias"] == "none"
-    assert kw["finetune_vision_layers"] is False
-    assert kw["finetune_language_layers"] is True
-    assert kw["finetune_attention_modules"] is True
-    assert kw["finetune_mlp_modules"] is True
+@pytest.mark.parametrize("name", [
+    "model.visual.blocks.0.attn.q_proj",
+    "base_model.model.model.vision_tower.encoder.layers.5.k_proj",
+    "vision_model.embed_tokens.weight",
+])
+def test_vision_path_matches_known_branches(name: str):
+    assert _VISION_PATH.search(name)
+
+
+@pytest.mark.parametrize("name", [
+    "model.layers.0.self_attn.q_proj",
+    "base_model.model.language_model.layers.10.mlp.gate_proj",
+    "lm_head.weight",
+])
+def test_vision_path_does_not_match_language_branch(name: str):
+    assert not _VISION_PATH.search(name)
