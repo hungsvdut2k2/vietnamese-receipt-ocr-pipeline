@@ -40,3 +40,18 @@ def test_jsonl_fallback_writes_lines(tmp_path):
     lines = f.read_text(encoding="utf-8").strip().split("\n")
     assert len(lines) == 2
     assert json.loads(lines[0])["loss"] == 1.0
+
+
+def test_per_epoch_eval_callback_calls_eval_fn(tmp_path):
+    from vn_receipt_ocr.train.callbacks import PerEpochEvalCallback
+
+    eval_calls = []
+
+    def fake_eval():
+        eval_calls.append(1)
+        return {"cer": 0.1}
+
+    cb = PerEpochEvalCallback(eval_fn=fake_eval, log_event_fn=lambda payload: None)
+    # Simulate HF Trainer "on_epoch_end" hook.
+    cb.on_epoch_end(args=None, state=type("S", (), {"epoch": 1})(), control=None)
+    assert eval_calls == [1]

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from vn_receipt_ocr.kaggle.secrets import get_secret_or_none
 
@@ -79,3 +79,23 @@ def log_event(state: dict, payload: dict) -> None:
         run.log(payload)
     if fb is not None:
         fb.log(payload)
+
+
+class PerEpochEvalCallback:
+    """A minimal trainer-callback shape (not subclassed from
+    transformers.TrainerCallback so it can be unit-tested without HF imports).
+    The training wrapper adapts it via a thin shim."""
+
+    def __init__(
+        self, *, eval_fn: Callable[[], dict], log_event_fn: Callable[[dict], None]
+    ) -> None:
+        self.eval_fn = eval_fn
+        self.log_event_fn = log_event_fn
+        self.history: list[dict] = []
+
+    def on_epoch_end(self, args, state, control, **kwargs):
+        metrics = self.eval_fn()
+        epoch = getattr(state, "epoch", None)
+        record = {"epoch": epoch, **{f"eval/{k}": v for k, v in metrics.items()}}
+        self.history.append(record)
+        self.log_event_fn(record)
