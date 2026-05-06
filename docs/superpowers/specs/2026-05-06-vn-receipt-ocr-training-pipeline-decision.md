@@ -35,6 +35,9 @@ Build `vn_receipt_ocr` as a subpackage under `src/` of the existing repository. 
 - **VietOCR comparison parity**: the model's output format must remain plain text. Adding any structured-output mode is a future decision that breaks this comparison and requires its own design pass.
 - **Secrets are external**: `WANDB_API_KEY`, `HF_TOKEN` come from Kaggle Secrets. Never hardcoded, never logged.
 - **Ephemeral-storage assumption for Kaggle**: durable artifacts live on HF Hub or W&B; `/kaggle/working/` is not durable and the pipeline must not assume otherwise.
+- **Shared image directory for both splits** (added during implementation): full receipt JPG for prefix `<X>` lives at `<images_dir>/<X>.jpg` for BOTH train and val splits, where `<images_dir>` is the same `train_images/train_images/`. The dataset's sibling `val_images/` directory holds a different, unlabeled MC-OCR set and must not be used for line-OCR training/eval. Configs, notebook, and dataset wiring all enforce this.
+- **Response-only loss masking via prefix-token equality** (added during implementation): `QwenVLCollator` asserts that the tokenized user-only prefix is a literal token-prefix of the tokenized full chat sequence before zeroing the first `prefix_len` label positions. If Qwen-VL's chat template ever changes shape, the assertion fails loudly rather than silently corrupting the loss target.
+- **PIL file-handle hygiene at boundaries** (added during implementation): `load_image_rgb` opens images under a context manager so the source FD is released as soon as `convert("RGB")` returns the in-memory copy. Used in both training collation and batch prediction; prevents FD exhaustion on long evaluation runs.
 
 ## In-flight Refinements
 
@@ -43,3 +46,21 @@ Build `vn_receipt_ocr` as a subpackage under `src/` of the existing repository. 
 - **Turned out:** Unsloth requires CUDA at install time (xformers wheel build). It cannot be installed on macOS / CPU-only machines, so `uv add` fails locally and CI without GPUs breaks.
 - **Chose:** Recorded Unsloth as `[project.optional-dependencies] gpu = ["unsloth"]`. Local dev / CI uses `pip install .` (no Unsloth); Kaggle uses `pip install vn-receipt-ocr[gpu]`.
 - **Why:** Preserves the dependency declaration for Kaggle while allowing the rest of the package (config, eval metrics, data loaders) to be developed and unit-tested without GPUs. Lazy-imports of `unsloth` already used in `model/loader.py` make the package importable without it. Tasks 26 (Kaggle notebook) and 27 (README) need to reference the `[gpu]` extras in install instructions.
+
+### 2026-05-06 — Train and val share `train_images/train_images/`; `val_images/` is unrelated
+- **Plan assumed:** train and val each had their own image directory, with val crops/full-images living under a `val_images/` sibling.
+- **Turned out:** the MC-OCR dataset ships full receipt JPGs for BOTH train and val prefixes under `train_images/train_images/`. The `val_images/` directory holds a different unlabeled set that is irrelevant to line-OCR. The val text manifest's prefixes resolve cleanly into `train_images/train_images/`; 0/231 missing.
+- **Chose:** Pointed both `data.train_images_dir` and `data.val_images_dir` at `<root>/train_images/train_images` in `configs/data/mcocr_train_val.yaml` and Cell 5 of `notebooks/kaggle_train.ipynb`. Added a comment in both files documenting that `val_images/` must be ignored.
+- **Why:** Matches what the dataset actually ships. Preserves the "train and val targets are reconstructed by the same procedure" invariant from brainstorming — including the same on-disk image source.
+
+### 2026-05-06 — `.gitignore data/` was a wildcard that shadowed tracked dirs
+- **Plan assumed:** `data/` in `.gitignore` only matched the project-root data download dir.
+- **Turned out:** without a leading `/`, the pattern matched `configs/data/`, `src/vn_receipt_ocr/data/`, and `tests/data/` recursively — silently dropped both `__init__.py` markers from the index for months and forced `git add -f` for tracked YAML configs.
+- **Chose:** Anchored to root: `/data/` and `/datasets/`. Restored the missing `__init__.py` markers as part of the same commit.
+- **Why:** Restores predictable git behavior. The wildcard had been a quiet source of "why won't git add this?" friction for the entire project. Curated as a domain rule via architectural-memory so the same trap doesn't recur.
+
+### 2026-05-06 — Final code review surfaced two real defects
+- **Plan assumed:** `load_image_rgb`'s `Image.open(p).convert("RGB")` and `QwenVLCollator`'s prefix-length subtraction were both correct end-to-end.
+- **Turned out:** (a) `Image.open` leaks the source FD because `convert()` returns a new image but does not close the file. Over thousands of eval samples with `batch_size=1`, this would exhaust file descriptors. (b) The collator trusted the chat-template prefix invariant without ever checking that the prefix tokens were a literal prefix of the full sequence; if the template's shape changed in a future Transformers/Unsloth release, training loss would silently mask the wrong tokens.
+- **Chose:** (a) Wrap `Image.open` in a `with` block; `convert()` runs inside the block and the source FD closes on exit. (b) Add a `torch.equal` assertion in the collator that fails loudly with a descriptive message if the prefix-token equality breaks.
+- **Why:** Both are silent-failure modes that would only manifest in production-scale runs. Loud failure is much cheaper than retrospective debugging of a bad checkpoint or a stuck Kaggle session.
