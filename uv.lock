@@ -4038,6 +4038,15 @@ wheels = [
 ]
 
 [[package]]
+name = "unsloth"
+version = "2024.8"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9d/98/57bdb80e3c935280417e59d20146243437fd5230306a4fbbf185d4d7d015/unsloth-2024.8.tar.gz", hash = "sha256:20f555588d16811a2e585636551bd31fde526b92d5f336b8501d9dc8daa47f8d", size = 2710338, upload-time = "2024-08-04T18:30:15.109Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ef/db/06d70295c863a245a46dd8423135133d77537d513420b5558dfa8f9f5cac/unsloth-2024.8-py3-none-any.whl", hash = "sha256:da2ee4de96a10b7489723dc5d3c6a2ef383774f7cf249abe44919c615ae8df49", size = 136628, upload-time = "2024-08-04T18:30:12.985Z" },
+]
+
+[[package]]
 name = "uri-template"
 version = "1.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -4082,6 +4091,11 @@ dependencies = [
     { name = "wandb" },
 ]
 
+[package.optional-dependencies]
+gpu = [
+    { name = "unsloth" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "hatchling" },
@@ -4111,8 +4125,10 @@ requires-dist = [
     { name = "scipy", specifier = ">=1.17.1" },
     { name = "transformers", specifier = ">=5.8.0" },
     { name = "trl", specifier = ">=1.3.0" },
+    { name = "unsloth", marker = "extra == 'gpu'" },
     { name = "wandb", specifier = ">=0.26.1" },
 ]
+provides-extras = ["gpu"]
 
 [package.metadata.requires-dev]
 dev = [
