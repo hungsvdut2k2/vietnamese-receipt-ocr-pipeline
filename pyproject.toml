@@ -26,6 +26,9 @@ dependencies = [
     "wandb>=0.26.1",
 ]
 
+[project.optional-dependencies]
+gpu = ["unsloth"]
+
 [dependency-groups]
 dev = [
     "hatchling>=1.29.0",
