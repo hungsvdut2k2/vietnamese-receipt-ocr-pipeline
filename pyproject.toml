@@ -1,0 +1,19 @@
+[project]
+name = "vietnamese-receipt-ocr"
+version = "0.1.0"
+description = "Vietnamese receipt EDA pipeline (Phase 0): generates machine-readable configuration artifacts from MC-OCR 2021 and 5CD-AI/Viet-Receipt-VQA"
+requires-python = ">=3.11"
+dependencies = [
+    "datasets>=4.8.5",
+    "ipykernel>=7.2.0",
+    "kagglehub>=1.0.1",
+    "matplotlib>=3.10.9",
+    "notebook>=7.5.6",
+    "numpy>=2.4.4",
+    "opencv-python>=4.13.0.92",
+    "pandas>=3.0.2",
+    "pillow>=12.2.0",
+    "pyyaml>=6.0.3",
+    "scipy>=1.17.1",
+    "transformers>=5.8.0",
+]

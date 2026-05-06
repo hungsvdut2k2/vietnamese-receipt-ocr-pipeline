@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# uv
+# (uv.lock IS committed; .python-version IS committed)
+
+# Jupyter
+.ipynb_checkpoints/
+
+# EDA artifacts (regenerated from notebook)
+eda_outputs/
+
+# Datasets (downloaded at runtime; Kaggle/HF caches relocated to project root)
+data/
+datasets/
+*.zip
+
+# Secrets (HF_TOKEN, KAGGLE_KEY, etc.)
+.env
+
+# OS
+.DS_Store
