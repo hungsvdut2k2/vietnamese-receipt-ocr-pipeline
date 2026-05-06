@@ -27,3 +27,17 @@ def test_aggregate_empty_pred_rate():
         metrics_enabled=["empty_pred_rate"],
     )
     assert out["empty_pred_rate"] == 0.5
+    # Verify no spurious keys when only one metric is enabled.
+    assert set(out.keys()) == {"empty_pred_rate"}
+
+
+def test_aggregate_empty_predictions_no_zero_division():
+    # With predictions=[] and only empty_pred_rate enabled, the function must
+    # not raise ZeroDivisionError; it returns 0.0 as the sentinel.
+    out = aggregate_metrics(
+        predictions=[],
+        references=[],
+        latency_ms=[],
+        metrics_enabled=["empty_pred_rate"],
+    )
+    assert out["empty_pred_rate"] == 0.0

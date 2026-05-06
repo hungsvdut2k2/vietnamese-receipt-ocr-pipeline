@@ -41,7 +41,10 @@ def aggregate_metrics(
         out["mean_length_ratio"] = (sum(finite) / len(finite)) if finite else 0.0
         out["length_ratios"] = ratios
     if "empty_pred_rate" in metrics_enabled:
-        out["empty_pred_rate"] = sum(1 for p in predictions if len(p) == 0) / len(predictions)
+        if predictions:
+            out["empty_pred_rate"] = sum(1 for p in predictions if len(p) == 0) / len(predictions)
+        else:
+            out["empty_pred_rate"] = 0.0
     if "latency" in metrics_enabled:
         pct = compute_latency_percentiles(latency_ms)
         out["latency_p50"] = pct["p50"]
