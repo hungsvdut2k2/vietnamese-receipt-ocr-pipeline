@@ -139,6 +139,11 @@ def train(config: TrainConfig, *, dry_run: bool = False, max_steps: int | None =
         logging_steps=10,
         report_to=[],
         save_strategy="no",
+        # MCOCRDataset is a torch.utils.data.Dataset, not a HF datasets.Dataset,
+        # so it lacks `column_names`. Our QwenVLCollator already handles all
+        # tokenization/formatting, so disable TRL's dataset preprocessing.
+        dataset_kwargs={"skip_prepare_dataset": True},
+        remove_unused_columns=False,
     )
 
     def _eval_now() -> dict:
